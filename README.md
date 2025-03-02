@@ -160,7 +160,7 @@ vm.DoByteCode(bytecode);
 > DoString and DoByteCode expects nothing to be returned by default, there is a second argument for setting how much returned values there should be and then after that those values will be on the stack for you to manipulate.
 
 # Where have they been used?
-These bindings have been used in my own game engine called Bitq.
+These bindings have been used in my own game engine called Bitq, and other of my projects.
 
 # Considerations
 - Since this project utilizes reflection heavily, it will probably not work in NAOT, it should work fine in IL2CPP and other platforms.
