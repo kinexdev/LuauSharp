@@ -53,7 +53,7 @@ reading the objects require an index which start at 1 (luau uses 1 based indexes
 to register the function, it's the following
 
 ```cs
-vm.PushGlobalFunction("Print", print;
+vm.PushGlobalFunction("Print", print);
 ```
 
 # Userdata
