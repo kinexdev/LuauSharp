@@ -55,8 +55,7 @@ namespace Luau_CSharp
 
             if (CachedTypes.ContainsKey(typeof(T)))
                 throw new Exception("Type already registered");
-
-            Luau_newtable(L);
+            
             //var indexFunction = (LuaFunction)(_ => LuaIndexFunction(this, typeof(T), true));
             //GCHandle idxgch = GCHandle.Alloc(indexFunction);
             //objectHandles.Add((IntPtr)idxgch, idxgch);
