@@ -14,7 +14,7 @@
                 file = "GCExample.luau";
             else if (key == "D3")
                 file = "EventExample.luau";
-            Console.WriteLine("\n");
+            Console.Write("\n");
             
             vm = new VM(Console.WriteLine);
             vm.RegisterUserdataType<Test>();
