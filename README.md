@@ -20,7 +20,7 @@ The VM takes in 1 required argument, it is the print function that will be calle
 # Functions
 After the vm is initialized, you can push custom C# functions to the luau VM via the `PushGlobalFunction` function, it takes in a string for the name and a `LuaFunction` delegate.
 
-The `LuaFunction` delegate returns an `int` and takes in an `IntPtr` as the lua state. 
+The `LuaFunction` delegate returns an `int` that returns the number of results it returned and takes in an `IntPtr` as the lua state, this will get turned into a function pointer.
 
 heres an example function
 
