@@ -41,6 +41,6 @@ public class Test
     
     private void Print()
     {
-        Console.WriteLine($"userdata was called by luau! number is {number}.");
+        Console.WriteLine($"C# : userdata was called by luau! number is {number}.");
     }
 }
