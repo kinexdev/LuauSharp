@@ -4,7 +4,7 @@
     {
         public static VM.LuaRef Ref;
         public static VM vm;
-    
+        
         static void Main()
         {
             Console.WriteLine("What example do you want to try? 1 = Normal example, 2 = GC example, 3 = Event Example");

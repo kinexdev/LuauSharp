@@ -689,16 +689,16 @@ namespace Luau_CSharp
             return null;
         }
 
-        public void DoString(string source)
+        public void DoString(string source, int results = 0)
         {
             var bytecode = Compile(source, out UIntPtr size);
             if (Load(bytecode, size) != 0)
                 throw new Exception("VM load failed");
             else
-                Execute();
+                Execute(results);
         }
 
-        public void DoByteCode(byte[] bytecode)
+        public void DoByteCode(byte[] bytecode, int results = 0)
         {
             GCHandle pinnedArray = GCHandle.Alloc(bytecode, GCHandleType.Pinned);
             UIntPtr size = new UIntPtr((uint)bytecode.Length);
@@ -709,7 +709,7 @@ namespace Luau_CSharp
                 throw new Exception("VM load failed");
             }
             else
-                Execute();
+                Execute(results);
 
             pinnedArray.Free();
         }
