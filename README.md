@@ -165,3 +165,4 @@ These bindings have been used in my own game engine called Bitq, and other of my
 # Considerations
 - Since this project utilizes reflection heavily, it will probably not work in NAOT, it should work fine in IL2CPP and other platforms.
 - This is only single threaded, it takes care of userdatas in a way thats single threaded (storing in lists) which will introduce errors if you try to multithread it! so if you have multiple scripts they all need to run on the same thread.
+- Basic API for tables has not been made yet, so you need to manually create tables using the Luau class.
