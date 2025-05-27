@@ -9,6 +9,9 @@ The benchmarks I ran were to create 25000 C# userdata objects (managed) and call
 # Low level
 These luau bindings are really low level because they are built for speed and performance, not for convenience. LuauSharp is just a thin C# wrapper over the Luau C API. LuauSharp often forces you to use pointers for example the luaState or function pointers. Although its not just pure pointer usage, you also get some abstractions like for userdata or when you pass in a string. LuauSharp also uses no reflection for AOT and performance reasons - you need to do index and newindex manually.
 
+# Why
+There is currently no actual luau C# bindings that are open source, have support for userdata and are as fast and performant as this. There are some luau bindings that I found but they fall short to the criteria which were essential to me, so I made my own solution.
+
 # Set Up
 To set up Luau-CSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
 
