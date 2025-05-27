@@ -117,7 +117,7 @@ namespace LuauSharp
 #endif
         public static int Print(LuauNative.lua_State* luaState)
         {
-            ExampleUserdata? number = Luau.GetUserdataSafe<ExampleUserdata>(luaState, 1);
+            ExampleUserdata number = Luau.GetUserdata<ExampleUserdata>(luaState, 1);
 
             if (number != null)
                 Console.WriteLine("C# : " + number.number + " number!");
