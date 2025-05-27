@@ -9,6 +9,8 @@ The benchmarks I ran were to create 25000 C# userdata objects (managed) and call
 # Low level
 These luau bindings are really low level because they are built for speed and performance, not for convenience. LuauSharp is just a thin C# wrapper over the Luau C API. LuauSharp often forces you to use pointers for example the luaState or function pointers. Although its not just pure pointer usage, you also get some abstractions like for userdata or when you pass in a string. LuauSharp also uses no reflection for AOT and performance reasons - you need to do index and newindex manually.
 
+These bindings are zero alloc until you work with strings, you can't avoid allocations during the conversion of a byte* -> managed string, thats why `GetBytePtr` is recommended over `GetString`/`GetStringSafe`.
+
 # Why
 There is currently no actual luau C# bindings that are open source, have support for userdata and are as fast and performant as this. There are some luau bindings that I found but they fall short to the criteria which were essential to me, so I made my own solution.
 
