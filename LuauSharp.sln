@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luau-CSharp", "Luau-CSharp.csproj", "{92E5D5D3-AAE3-4688-86DF-5BB685410AC6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuauSharp", "LuauSharp.csproj", "{92E5D5D3-AAE3-4688-86DF-5BB685410AC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
