@@ -11,6 +11,8 @@ These luau bindings are really low level because they are built for speed and pe
 
 These bindings are zero alloc until you work with strings, you can't avoid allocations during the conversion of a byte* -> managed string, thats why `GetBytePtr` is recommended over `GetString`/`GetStringSafe`.
 
+I use spans and stackalloc for small strings (below 256 bytes) so it doesn't allocate on the heap when doing managed string -> byte* conversion. the opposite isn't possible in .NET/C#.
+
 # Why
 There is currently no actual luau C# bindings that are open source, have support for userdata and are as fast and performant as this. There are some luau bindings that I found but they fall short to the criteria which were essential to me, so I made my own solution.
 
