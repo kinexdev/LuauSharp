@@ -63,17 +63,7 @@ namespace LuauSharp
         public static BytecodeResult Compile(string source, LuauNative.lua_CompileOptions options = default)
         {
             int size = 0;
-
-            int length = Encoding.UTF8.GetByteCount(source) + 1;
-            // heap alloc, its a 1 time thing anyways.
-            Span<byte> buffer = new byte[length];
-            int written = Encoding.UTF8.GetBytes(source, buffer);
-            buffer[written] = 0;
-
-            fixed (byte* strPtr = buffer)
-            {
-                return new BytecodeResult(LuauNative.Luau_compile(strPtr, &options, &size), size);
-            }
+            return new BytecodeResult(LuauNative.Luau_compile(source, &options, &size), size);
         }
 
         /// <summary>
@@ -139,7 +129,7 @@ namespace LuauSharp
 
             fixed (byte* namePtr = buffer)
             {
-                if (LuauNative.Luau_load(luaState, namePtr, result.data, &result.size) == 0)
+                if (LuauNative.Luau_load(luaState, namePtr, result.data, result.size) == 0)
                 {
                     if (useCodegen)
                         LuauNative.Luau_codegen_compile(luaState, -1);
@@ -172,7 +162,7 @@ namespace LuauSharp
             {
                 fixed (byte* namePtr = buffer)
                 {
-                    if (LuauNative.Luau_load(luaState, namePtr, bytecodePtr, &bytecodeLen) == 0)
+                    if (LuauNative.Luau_load(luaState, namePtr, bytecodePtr, bytecodeLen) == 0)
                     {
                         if (useCodegen)
                             LuauNative.Luau_codegen_compile(luaState, -1);

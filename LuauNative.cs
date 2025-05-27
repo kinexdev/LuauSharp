@@ -137,11 +137,11 @@ namespace LuauSharp
         [DllImport(LuauDLL)]
         public static extern void Luau_sandbox(lua_State* L);
         [DllImport(LuauDLL, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern byte* Luau_compile(byte* source, lua_CompileOptions* options, int* size);
+        public static extern byte* Luau_compile(string source, lua_CompileOptions* options, int* size);
         [DllImport(LuauDLL)]
         public static extern void Luau_openlibs(lua_State* L);
         [DllImport(LuauDLL, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public static extern int Luau_load(lua_State* L, byte* chunkname, byte* data, int* size, int env = 0);
+        public static extern int Luau_load(lua_State* L, byte* chunkname, byte* data, int size, int env = 0);
         [DllImport(LuauDLL, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern int Luau_pcall(lua_State* L, int nargs, int nresults, int errfunc);
         [DllImport(LuauDLL)]
