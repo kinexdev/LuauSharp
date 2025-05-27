@@ -1,171 +1,240 @@
-# Luau-CSharp
-C# bindings for Luau that support IL2CPP
+# LuauSharp
+Very unsafe C# bindings for luau, built with flexibility, performance, support for AOT platforms and cross platform in mind.
+
+# Benchmarks
+The benchmarks I ran were to create 25000 C# userdata objects (managed) and call a function in that managed object without precompiling the source to bytecode. LuauSharp performed exceptionally well, it is the fastest lua/u interpreter and with zero allocs compared to baseline C# - It has no GC overhead! I used benchmarkdotnet for the benchmark.
+
+![graph2](https://github.com/user-attachments/assets/d0da98af-1d95-4efe-b20d-3f324a029709)
+
+# Low level
+These luau bindings are really low level because they are built for speed and performance, not for convenience. LuauSharp is just a thin C# wrapper over the Luau C API. LuauSharp often forces you to use pointers for example the luaState or function pointers. Although its not just pure pointer usage, you also get some abstractions like for userdata or when you pass in a string. LuauSharp also uses no reflection for AOT and performance reasons - you need to do index and newindex manually.
 
 # Set Up
-To set up Luau-CSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/Luau-CSharp-Build) or you could use the precompiled binaries present in the repo.
+To set up Luau-CSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
 
-After you imported all the scripts and binaries to your project you need to initialize the VM, The VM manages & abstracts the luau state from you, these are not fully high-level bindings though, you still need to manage some of it by yourself.
-to initialize the VM, it's the following
+After you imported all the scripts and binaries to your project, to make a simple program that prints `hello world` you do the following.
 
 ```cs
-vm = new VM(Console.WriteLine);
-```
-> [!IMPORTANT]  
-> Do not forget `vm.Dispose()` when you are with the vm!
->
-> if you are using unity and il2cpp, add `LUAU_UNITY` to the Scripting Symbols.
+LuauNative.lua_State* luaState = Luau.New();
+// this is optional
+bool result = Luau.EnableCodegen(luaState);
 
-The VM takes in 1 required argument, it is the print function that will be called by luau.
+Luau.DoString(luaState, "Script", "print(\"hello world!\")", result);
+Luau.Close(luaState);
+```
+
+If you are using unity and il2cpp, add `LUAU_UNITY` to the Scripting Symbols for everything to work correctly.
 
 # Functions
-After the vm is initialized, you can push custom C# functions to the luau VM via the `PushGlobalFunction` function, it takes in a string for the name and a `LuaFunction` delegate.
-
-The `LuaFunction` delegate returns an `int` that returns the number of results it returned and takes in an `IntPtr` as the lua state, this will get turned into a function pointer.
+After the luaState is created, you can push custom C# functions to the luau VM via the `PushGlobalFunction` or `PushCFunction` function, it takes in a string for the name and a pointer to the function.
 
 heres an example function
 
 ```cs
-        public static int print(IntPtr L)
+        // Create the function keep alive delegate
+        private static readonly LuauNative.LuaCFunction PrintDelegateKA = Print;
+        // Create the function pointer to that delegate
+        private static readonly void* printPtr = (void*)Marshal.GetFunctionPointerForDelegate(PrintDelegateKA);
+
+        // Create the actual lua function
+#if LUAU_UNITY
+        [MonoPInvokeCallback(typeof(LuauNative.LuaCFunction))]
+#endif
+        public static int Print(LuauNative.lua_State* luaState)
         {
-            var vm = VM.GetVMInstance(L);
-            var msg = vm.ReadString(1);
-            Console.WriteLine(msg);
+            int nargs = Luau.GetTop(luaState);
+
+            for (int i = 1; i <= nargs; i++)
+            {
+                if (Luau.IsString(luaState, i))
+                {
+                    var s = Luau.GetString(luaState, i);
+                    Console.WriteLine(s);
+                }
+                else
+                {
+                    var t = Luau.GetType(luaState, i);
+                    switch (t)
+                    {
+                        case LuauNative.LuaType.Boolean:
+                            var b = Luau.GetBoolean(luaState, i);
+                            Console.WriteLine(b);
+                            break;
+                        case LuauNative.LuaType.Number:
+                            var n = Luau.GetNumber(luaState, i);
+                            Console.WriteLine(n);
+                            break;
+                        default:
+                            Console.WriteLine(t);
+                            break;
+                    }
+                }
+            }
+
             return 0;
         }
 ```
 
+the `[MonoPInvokeCallback(typeof(LuaFunction))]` attribute needs to be added and the method needs to be static if you are using IL2CPP.
 
-> [!IMPORTANT]  
-> the `[MonoPInvokeCallback(typeof(LuaFunction))]` attribute needs to be added and the method needs to be static if you are using IL2CPP
-> 
-> if this is used on userdata, you also need to include the `[LuauCallableFunction]` attribute and it is automatically picked up through reflection.
-
-this works in a similar way to luas function system, `var vm = VM.GetVMInstance(L);` is quite important when you are working with userdata, the vm abstracts pushing + reading objects and overall just making it easier, the most important methods in the `VM` are 
-- `GetArguments`
-- `ReadNumber`
-- `ReadString`
-- `ReadBoolean`,
-- `ReadUserdata<T>`
-- `PushValueToStack`
-
-reading the objects require an index which start at 1 (luau uses 1 based indexes) and they return a nullable, when you push the objects it takes care of everything automatically for you including GC.
-
-to register the function, it's the following
+then you can push the function globally.
 
 ```cs
-vm.PushGlobalFunction("Print", print);
+
+LuauNative.lua_State* luaState = Luau.New();
+...
+Luau.PushGlobalFunction(luaState, "print", printPtr);
+...
 ```
 
 # Userdata
-
-
-> [!CAUTION]
-> Be careful of what you expose.
-
-To make a userdata class, it's the following
+This is an example of a userdata with a index and a newindex function, these allow you to create a new instance of the userdata and modify it's variable called `number`. 
 
 ```cs
-using Luau_CSharp;
-
-public class Test
-{
-    [LuauVariable] public double number;
-
-    public Test(float num)
-    {
-        number = num;
-    }
-
-    [LuauCallableFunction]
+using System.Runtime.InteropServices;
+using System;
 #if LUAU_UNITY
-    [MonoPInvokeCallback(typeof(LuaFunction))]
+using AOT;
 #endif
-    public static int New(IntPtr L)
+
+namespace LuauSharp
+{
+    public unsafe class ExampleUserdata
     {
-        var vm = VM.GetVMInstance(L);
-        var value = vm.ReadNumber(1);
-        if (value.HasValue)
+        public float number;
+
+        private static readonly LuauNative.LuaCFunction NewDelegateKA = New;
+        private static readonly void* NewPtr = (void*)Marshal.GetFunctionPointerForDelegate(NewDelegateKA);
+
+        private static readonly LuauNative.LuaCFunction IndexDelegateKA = Index;
+        private static readonly void* IndexPtr = (void*)Marshal.GetFunctionPointerForDelegate(IndexDelegateKA);
+
+        private static readonly LuauNative.LuaCFunction NewIndexDelegateKA = NewIndex;
+        private static readonly void* NewIndexPtr = (void*)Marshal.GetFunctionPointerForDelegate(NewIndexDelegateKA);
+
+        private static readonly LuauNative.LuaCFunction PrintDelegateKA = Print;
+        private static readonly void* PrintPtr = (void*)Marshal.GetFunctionPointerForDelegate(PrintDelegateKA);
+
+        public ExampleUserdata(float num)
         {
-            var obj = new Test((float)value);
-            vm.PushValueToStack(obj);
-            return 1;
+            number = num;
         }
 
-        return 0;
-    }
+        public static void Register(LuauNative.lua_State* luaState)
+        {
+            Luau.NewTable(luaState);
+            Luau.PushCFunction(luaState, NewPtr);
+            Luau.SetField(luaState, -2, "new");
+            Luau.SetGlobal(luaState, "example");
+        }
 
-    [LuauCallableFunction]
 #if LUAU_UNITY
-    [MonoPInvokeCallback(typeof(LuaFunction))]
+    [MonoPInvokeCallback(typeof(LuauNative.LuaCFunction))]
 #endif
-    public static int print(IntPtr L)
-    {
-        var vm = VM.GetVMInstance(L);
-        var go = vm.ReadUserdata<Test>(1);
-        go?.Print();
-        return 0;
-    }
-    
-    private void Print()
-    {
-        Console.WriteLine($"C# : userdata was called by luau! number is {number}.");
+        public static int New(LuauNative.lua_State* luaState)
+        {
+            double? number = Luau.GetNumberSafe(luaState, 1);
+
+            if (number.HasValue)
+            {
+                ExampleUserdata exampleUserdata = new ExampleUserdata((float)number.Value);
+                Luau.PushUserdata(luaState, exampleUserdata);
+
+                //metatable
+                Luau.NewTable(luaState);
+                Luau.PushCFunction(luaState, IndexPtr);
+                Luau.SetField(luaState, -2, "__index");
+                Luau.PushCFunction(luaState, NewIndexPtr);
+                Luau.SetField(luaState, -2, "__newindex");
+                Luau.SetMetatable(luaState, -2);
+                return 1;
+            }
+
+            return 0;
+        }
+
+#if LUAU_UNITY
+    [MonoPInvokeCallback(typeof(LuauNative.LuaCFunction))]
+#endif
+        public static int Index(LuauNative.lua_State* luaState)
+        {
+            ExampleUserdata userdata = Luau.GetUserdata<ExampleUserdata>(luaState, 1);
+
+            if (userdata == null)
+                return 0;
+            
+            byte* name = Luau.GetBytePtr(luaState, 2);
+
+            if (Luau.StrCmp(name, "print") == 0)
+            {
+                Luau.PushCFunction(luaState, PrintPtr);
+                return 1;
+            }
+
+            if (Luau.StrCmp(name, "number") == 0)
+            {
+                Luau.PushNumber(luaState, userdata.number);
+                return 1;
+            }
+
+            return 0;
+        }
+
+#if LUAU_UNITY
+    [MonoPInvokeCallback(typeof(LuauNative.LuaCFunction))]
+#endif
+        public static int NewIndex(LuauNative.lua_State* luaState)
+        {
+            ExampleUserdata userdata = Luau.GetUserdata<ExampleUserdata>(luaState, 1);
+
+            if (userdata == null)
+                return 0;
+            
+            byte* name = Luau.GetBytePtr(luaState, 2);
+            
+            if (Luau.StrCmp(name, "number") == 0)
+            {
+                double? number = Luau.GetNumberSafe(luaState, 3);
+
+                if (number.HasValue)
+                {
+                    userdata.number = (float)number.Value;
+                }
+            }
+
+            return 0;
+        }
+
+#if LUAU_UNITY
+    [MonoPInvokeCallback(typeof(LuauNative.LuaCFunction))]
+#endif
+        public static int Print(LuauNative.lua_State* luaState)
+        {
+            ExampleUserdata number = Luau.GetUserdata<ExampleUserdata>(luaState, 1);
+
+            if (number != null)
+                Console.WriteLine("C# : " + number.number + " number!");
+            else
+                Console.WriteLine("C# : NULL!");
+
+            return 0;
+        }
     }
 }
 ```
 
-the `LuauVariable` is used for registering variables in userdata.
-
-after you are done with the userdata you forward the type to the luau VM
-
-> [!IMPORTANT]  
-> the `LuauVariable` is used for registering variables in userdata.
->
-> any userdata not forwarded will throw an error.
+To make it exist in your luaState, you can call the `register` function provided in the userdata.
 
 ```cs
-vm.RegisterUserdataType<Test>();
+
+LuauNative.lua_State* luaState = Luau.New();
+...
+ExampleUserdata.Register(luaState);
+...
 ```
 
-# Executing a script
-There is two ways to execute luau scripts.
-- From string
-- From bytecode
+Userdata can be any C# object, it can be a class, struct or a list, unmanaged object etc it can be anything.
 
-> [!NOTE]
-> Executing from bytecode is faster as it's already been compiled but less dynamic
-
-From now on the `Script` argument refers to script content.
-
-# Do String
-To execute a script from a string, it's the following.
-
-```cs
-vm.DoString(Script);
-```
-
-# Do Bytecode
-To do bytecode, it first requires you to compile to bytecode. To compile a script to bytecode, it's the following.
-
-```cs
-vm.Compile(Script, out byte[] bytecode);
-```
-
-and then you can do the bytecode
-
-```cs
-vm.DoByteCode(bytecode);
-```
-
-> [!Note]
-> DoString and DoByteCode expects nothing to be returned by default, there is a second argument for setting how much returned values there should be and then after that those values will be on the stack for you to manipulate.
-
-# Where have they been used?
-These bindings have been used in my own game engine called Bitq, and other of my projects.
-
-# Considerations
-- Since this project utilizes reflection heavily, it will probably not work in NAOT, it should work fine in IL2CPP and other platforms.
-- This is only single threaded, it takes care of userdatas in a way thats single threaded (storing in lists) which will introduce errors if you try to multithread it! so if you have multiple scripts they all need to run on the same thread.
-- Basic API for tables has not been made yet, so you need to manually create tables using the Luau class.
-
-# Thank yous
-while i was making this and got stuck i used [luauSharp](https://github.com/TigersUniverse/LuauSharp/tree/main) to help me when i got stuck since when i was making this i was quite new to how lua vms worked since i come from moonsharp.
+# Notes
+Most of the code is self documented and contains XML documents explaining what it does.
+These bindings are intentionally unsafe and require you to understand low level C#, if you want safety or higher level abstraction. This library isn't for you.
