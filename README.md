@@ -1,5 +1,5 @@
 # LuauSharp
-Very unsafe C# bindings for luau, built with flexibility, performance, support for AOT platforms and cross platform in mind.
+Very unsafe C# bindings for luau, built with flexibility, performance and support for AOT platforms in mind.
 
 # Benchmarks
 The benchmarks I ran were to create 25000 C# userdata objects (managed) and call a function in that managed object without precompiling the source to bytecode. LuauSharp performed exceptionally well, it is the fastest lua/u interpreter and with zero allocs compared to baseline C# - It has no GC overhead! I used benchmarkdotnet for the benchmark.
