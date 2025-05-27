@@ -75,7 +75,7 @@ heres an example function
         }
 ```
 
-the `[MonoPInvokeCallback(typeof(LuaFunction))]` attribute needs to be added and the method needs to be static if you are using IL2CPP.
+the `[MonoPInvokeCallback(typeof(LuaFunction))]` attribute needs to be added if your using IL2CPP and the method needs to be static if you are using IL2CPP or NAOT.
 
 then you can push the function globally.
 
