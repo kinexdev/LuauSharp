@@ -245,3 +245,4 @@ Userdata can be any C# object, it can be a class, struct or a list, unmanaged ob
 # Notes
 Most of the code is self documented and contains XML documents explaining what it does.
 These bindings are intentionally unsafe and require you to understand low level C#, if you want safety or higher level abstraction. This library isn't for you.
+Currently there is no coroutine API, but i plan on rolling that out today-tomorrow.
