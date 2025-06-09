@@ -7,5 +7,5 @@ print("hello world!")
 print(num)
 
 -- Calling Userdata
-local x = example.new(10)
-x:print()
+local x = ExampleUserdataHighLevel.New(10)
+x:Print()

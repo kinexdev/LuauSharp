@@ -241,9 +241,21 @@ namespace LuauSharp
         public static void PushUserdata(LuauNative.lua_State* luaState, object userdataObject)
         {
             void* ptr = LuauNative.Luau_newuserdatadtor(luaState, sizeof(UserdataProxy), DestructorPtr);
-            GCHandle handle = GCHandle.Alloc(userdataObject, GCHandleType.Pinned);
+            GCHandle handle = GCHandle.Alloc(userdataObject, GCHandleType.Normal);
             UserdataProxy* ud = (UserdataProxy*)ptr;
             ud->data = GCHandle.ToIntPtr(handle);
+        }
+
+        /// <summary>
+        /// Creates a new unmanaged userdata and adds it to the stack on the lua state, it returns the object as a T* and has a custom destructor.
+        /// </summary>
+        /// <param name="luaState"></param>
+        /// <param name="userdataObject"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T* PushUserdataRaw<T>(LuauNative.lua_State* luaState, void* userdataDestructor) where T : unmanaged
+        {
+            void* ptr = LuauNative.Luau_newuserdatadtor(luaState, sizeof(T), userdataDestructor);
+            return (T*)ptr;
         }
 
         /// <summary>
@@ -251,7 +263,7 @@ namespace LuauSharp
         /// </summary>
         /// <param name="userdata"></param>
 #if LUAU_UNITY
-    [MonoPInvokeCallback(typeof(LuauNative.UserdataDestructor))]
+        [MonoPInvokeCallback(typeof(LuauNative.UserdataDestructor))]
 #endif
         private static void UserdataDestructor(void* userdata)
         {
@@ -396,11 +408,25 @@ namespace LuauSharp
         }
 
         /// <summary>
+        /// Pushes light userdata to the stack.
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void PushLightUserdata(LuauNative.lua_State* luaState, void* lightUserdata) => LuauNative.Luau_pushcfunction(luaState, lightUserdata);
+
+        /// <summary>
         /// Pushes a C function via the pointer to the stack.
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void PushCFunction(LuauNative.lua_State* luaState, void* functionPtr) => LuauNative.Luau_pushcfunction(luaState, functionPtr);
+        
+        /// <summary>
+        /// Pushes a C function via the pointer to the stack.
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void PushCFunction(LuauNative.lua_State* luaState, LuauNative.LuaCFunction function) => LuauNative.Luau_pushcfunction(luaState, function);
 
         /// <summary>
         /// Pushes a number to the stack.
@@ -566,10 +592,24 @@ namespace LuauSharp
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T GetUserdata<T>(LuauNative.lua_State* luaState, int index) where T : class
+        public static T GetUserdata<T>(LuauNative.lua_State* luaState, int index)
         {
             var ud = (UserdataProxy*)LuauNative.Luau_touserdata(luaState, index);
             return (T)GCHandle.FromIntPtr(ud->data).Target!;
+        }
+
+
+        /// <summary>
+        /// Gets the userdata from the index from the stack with no safety as a raw unmanaged object.
+        /// </summary>
+        /// <param name="luaState"></param>
+        /// <param name="index"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T* GetUserdataRaw<T>(LuauNative.lua_State* luaState, int index) where T : unmanaged
+        {
+            return (T*)LuauNative.Luau_touserdata(luaState, index);
         }
 
         /// <summary>
@@ -594,7 +634,7 @@ namespace LuauSharp
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string? GetString(LuauNative.lua_State* luaState, int index) =>
+        public static string GetString(LuauNative.lua_State* luaState, int index) =>
             Marshal.PtrToStringUTF8((IntPtr)(LuauNative.Luau_tostring(luaState, index)));
 
         /// <summary>

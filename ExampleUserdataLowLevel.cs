@@ -6,7 +6,7 @@ using AOT;
 
 namespace LuauSharp
 {
-    public unsafe class ExampleUserdata
+    public unsafe class ExampleUserdataLowLevel
     {
         public float number;
 
@@ -22,7 +22,7 @@ namespace LuauSharp
         private static readonly LuauNative.LuaCFunction PrintDelegateKA = Print;
         private static readonly void* PrintPtr = (void*)Marshal.GetFunctionPointerForDelegate(PrintDelegateKA);
 
-        public ExampleUserdata(float num)
+        public ExampleUserdataLowLevel(float num)
         {
             number = num;
         }
@@ -44,8 +44,8 @@ namespace LuauSharp
 
             if (number.HasValue)
             {
-                ExampleUserdata exampleUserdata = new ExampleUserdata((float)number.Value);
-                Luau.PushUserdata(luaState, exampleUserdata);
+                ExampleUserdataLowLevel exampleUserdataLowLevel = new ExampleUserdataLowLevel((float)number.Value);
+                Luau.PushUserdata(luaState, exampleUserdataLowLevel);
 
                 //metatable
                 Luau.NewTable(luaState);
@@ -65,9 +65,9 @@ namespace LuauSharp
 #endif
         public static int Index(LuauNative.lua_State* luaState)
         {
-            ExampleUserdata userdata = Luau.GetUserdata<ExampleUserdata>(luaState, 1);
+            ExampleUserdataLowLevel userdataLowLevel = Luau.GetUserdata<ExampleUserdataLowLevel>(luaState, 1);
 
-            if (userdata == null)
+            if (userdataLowLevel == null)
                 return 0;
             
             byte* name = Luau.GetBytePtr(luaState, 2);
@@ -80,7 +80,7 @@ namespace LuauSharp
 
             if (Luau.StrCmp(name, "number") == 0)
             {
-                Luau.PushNumber(luaState, userdata.number);
+                Luau.PushNumber(luaState, userdataLowLevel.number);
                 return 1;
             }
 
@@ -92,9 +92,9 @@ namespace LuauSharp
 #endif
         public static int NewIndex(LuauNative.lua_State* luaState)
         {
-            ExampleUserdata userdata = Luau.GetUserdata<ExampleUserdata>(luaState, 1);
+            ExampleUserdataLowLevel userdataLowLevel = Luau.GetUserdata<ExampleUserdataLowLevel>(luaState, 1);
 
-            if (userdata == null)
+            if (userdataLowLevel == null)
                 return 0;
             
             byte* name = Luau.GetBytePtr(luaState, 2);
@@ -105,7 +105,7 @@ namespace LuauSharp
 
                 if (number.HasValue)
                 {
-                    userdata.number = (float)number.Value;
+                    userdataLowLevel.number = (float)number.Value;
                 }
             }
 
@@ -117,7 +117,7 @@ namespace LuauSharp
 #endif
         public static int Print(LuauNative.lua_State* luaState)
         {
-            ExampleUserdata number = Luau.GetUserdata<ExampleUserdata>(luaState, 1);
+            ExampleUserdataLowLevel number = Luau.GetUserdata<ExampleUserdataLowLevel>(luaState, 1);
 
             if (number != null)
                 Console.WriteLine("C# : " + number.number + " number!");

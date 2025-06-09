@@ -162,6 +162,8 @@ namespace LuauSharp
         public delegate int LuaCFunction(lua_State* L);
         [DllImport(LuauDLL, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void Luau_pushcfunction(lua_State* L, void* fn);
+        [DllImport(LuauDLL, CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void Luau_pushcfunction(lua_State* L, LuaCFunction fn);
         [DllImport(LuauDLL)]
         public static extern void Luau_pushvalue(lua_State* L, int idx);
         [DllImport(LuauDLL)]
