@@ -1,5 +1,5 @@
 # LuauSharp
-Very unsafe C# bindings for luau, built with flexibility, performance, support for AOT platforms and cross platform in mind.
+Very unsafe C# bindings for luau, built with flexibility, performance and support for AOT platforms in mind.
 
 # Benchmarks
 The benchmarks I ran were to create 25000 C# userdata objects (managed) and call a function in that managed object without precompiling the source to bytecode. LuauSharp performed exceptionally well, it is the fastest lua/u interpreter and with zero allocs compared to baseline C# - It has no GC overhead! I used benchmarkdotnet for the benchmark.
@@ -8,6 +8,13 @@ The benchmarks I ran were to create 25000 C# userdata objects (managed) and call
 
 # Low level
 These luau bindings are really low level because they are built for speed and performance, not for convenience. LuauSharp is just a thin C# wrapper over the Luau C API. LuauSharp often forces you to use pointers for example the luaState or function pointers. Although its not just pure pointer usage, you also get some abstractions like for userdata or when you pass in a string. LuauSharp also uses no reflection for AOT and performance reasons - you need to do index and newindex manually.
+
+These bindings are zero alloc until you work with strings, you can't avoid allocations during the conversion of a byte* -> managed string, thats why `GetBytePtr` is recommended over `GetString`/`GetStringSafe`.
+
+I use spans and stackalloc for small strings (below 256 bytes) so it doesn't allocate on the heap when doing managed string -> byte* conversion. the opposite isn't possible in .NET/C#.
+
+# Why
+There is currently no actual luau C# bindings that are open source, have support for userdata and are as fast and performant as this. There are some luau bindings that I found but they fall short to the criteria which were essential to me, so I made my own solution.
 
 # Set Up
 To set up Luau-CSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
@@ -75,7 +82,7 @@ heres an example function
         }
 ```
 
-the `[MonoPInvokeCallback(typeof(LuaFunction))]` attribute needs to be added and the method needs to be static if you are using IL2CPP.
+the `[MonoPInvokeCallback(typeof(LuaFunction))]` attribute needs to be added if your using IL2CPP and the method needs to be static if you are using IL2CPP or NAOT.
 
 then you can push the function globally.
 
@@ -238,3 +245,4 @@ Userdata can be any C# object, it can be a class, struct or a list, unmanaged ob
 # Notes
 Most of the code is self documented and contains XML documents explaining what it does.
 These bindings are intentionally unsafe and require you to understand low level C#, if you want safety or higher level abstraction. This library isn't for you.
+Currently there is no coroutine API, but i plan on rolling that out today-tomorrow.
