@@ -1,4 +1,88 @@
-# LuauSharp
+# LuauSharp High Level
+
+Safe C# bindings for luau, built with convenience and support for IL2CPP in mind, these bindings are located in the `HighLevel` folder.
+
+# Benchmarks
+
+I haven't gotten a graph of the benchmark for this, but it performs x4-5 worse than LuauSharp Low Level, with 10x more GC allocations as they use reflection vigorously, keep in mind these bindings are not for performance, they are for developer convenience.
+
+# Why
+There is currently no actual luau C# bindings that are open source, have support for userdata and are as easy to use like this library, there are some other libraries but they fall short to this, this also works fully in IL2CPP through some hacks i did in this project (like all functions are actually userdata that contain a reference to that delegate) and other tricks.
+
+# Set Up
+To set up LuauSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
+
+After you imported all the scripts and binaries to your project, to make a simple program that prints `hello world` you do the following.
+
+```cs
+using LuauVM vm = new();
+vm.globals["print"] = (Action<object>)Console.WriteLine;
+vm.DoString("print(\"Hello World!\")");
+```
+
+If you are using unity and IL2CPP, add `LUAU_UNITY` to the Scripting Symbols for everything to work correctly.
+
+# Functions
+After the luaState is created, you can push custom C# functions to the luau VM through globals as casting them to their delegate type, they work on instance methods too, they do not need to be static.
+
+heres an example function
+
+```cs
+static void PrintHelloWorld()
+{
+    Console.WriteLine("Hello World!");
+}
+```
+
+then you can push the function to the globals.
+
+```cs
+using LuauVM vm = new();
+...
+vm.globals["printHelloWorld"] = (Action)PrintHelloWorld;
+...
+```
+
+# Userdata
+This is an example of a userdata, these allow you to create a new instance of the userdata and modify it's variable called `number`, all of it's metamethods are registered when you register the type, so you don't need to worry about anything, the constructor in lua for C# userdata is `New`
+
+```cs
+namespace LuauSharp.HighLevel
+{
+    public class ExampleUserdataHighLevel
+    {
+        public float number;
+
+        public ExampleUserdataHighLevel(float number)
+        {
+            this.number = number;
+        }
+        
+        public void Print()
+        {
+            Console.WriteLine("C# : " + number + " number!");
+        }
+    }
+}
+```
+
+Then you can register the userdata type to the LuauVM (it needs to be registered or else you will get an unknown type error)
+```cs
+using LuauVM vm = new();
+...
+vm.userdata.RegisterType<ExampleUserdataHighLevel>();
+...
+```
+
+You can now instantiate it and use it in lua.
+
+```lua
+-- Calling Userdata
+local x = ExampleUserdataHighLevel.New(10)
+x:Print()
+```
+
+# LuauSharp Low Level
 Very unsafe C# bindings for luau, built with flexibility, performance and support for AOT platforms in mind.
 
 # Benchmarks
@@ -17,7 +101,7 @@ I use spans and stackalloc for small strings (below 256 bytes) so it doesn't all
 There is currently no actual luau C# bindings that are open source, have support for userdata and are as fast and performant as this. There are some luau bindings that I found but they fall short to the criteria which were essential to me, so I made my own solution.
 
 # Set Up
-To set up Luau-CSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
+To set up LuauSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
 
 After you imported all the scripts and binaries to your project, to make a simple program that prints `hello world` you do the following.
 
@@ -38,48 +122,48 @@ After the luaState is created, you can push custom C# functions to the luau VM v
 heres an example function
 
 ```cs
-        // Create the function keep alive delegate
-        private static readonly LuauNative.LuaCFunction PrintDelegateKA = Print;
-        // Create the function pointer to that delegate
-        private static readonly void* printPtr = (void*)Marshal.GetFunctionPointerForDelegate(PrintDelegateKA);
+// Create the function keep alive delegate
+private static readonly LuauNative.LuaCFunction PrintDelegateKA = Print;
+// Create the function pointer to that delegate
+private static readonly void* printPtr = (void*)Marshal.GetFunctionPointerForDelegate(PrintDelegateKA);
 
-        // Create the actual lua function
+// Create the actual lua function
 #if LUAU_UNITY
-        [MonoPInvokeCallback(typeof(LuauNative.LuaCFunction))]
+[MonoPInvokeCallback(typeof(LuauNative.LuaCFunction))]
 #endif
-        public static int Print(LuauNative.lua_State* luaState)
+public static int Print(LuauNative.lua_State* luaState)
+{
+    int nargs = Luau.GetTop(luaState);
+
+    for (int i = 1; i <= nargs; i++)
+    {
+        if (Luau.IsString(luaState, i))
         {
-            int nargs = Luau.GetTop(luaState);
-
-            for (int i = 1; i <= nargs; i++)
-            {
-                if (Luau.IsString(luaState, i))
-                {
-                    var s = Luau.GetString(luaState, i);
-                    Console.WriteLine(s);
-                }
-                else
-                {
-                    var t = Luau.GetType(luaState, i);
-                    switch (t)
-                    {
-                        case LuauNative.LuaType.Boolean:
-                            var b = Luau.GetBoolean(luaState, i);
-                            Console.WriteLine(b);
-                            break;
-                        case LuauNative.LuaType.Number:
-                            var n = Luau.GetNumber(luaState, i);
-                            Console.WriteLine(n);
-                            break;
-                        default:
-                            Console.WriteLine(t);
-                            break;
-                    }
-                }
-            }
-
-            return 0;
+            var s = Luau.GetString(luaState, i);
+            Console.WriteLine(s);
         }
+        else
+        {
+            var t = Luau.GetType(luaState, i);
+            switch (t)
+            {
+                case LuauNative.LuaType.Boolean:
+                    var b = Luau.GetBoolean(luaState, i);
+                    Console.WriteLine(b);
+                    break;
+                case LuauNative.LuaType.Number:
+                    var n = Luau.GetNumber(luaState, i);
+                    Console.WriteLine(n);
+                    break;
+                default:
+                    Console.WriteLine(t);
+                    break;
+            }
+        }
+    }
+
+    return 0;
+}
 ```
 
 the `[MonoPInvokeCallback(typeof(LuaFunction))]` attribute needs to be added if your using IL2CPP and the method needs to be static if you are using IL2CPP or NAOT.
@@ -245,4 +329,3 @@ Userdata can be any C# object, it can be a class, struct or a list, unmanaged ob
 # Notes
 Most of the code is self documented and contains XML documents explaining what it does.
 These bindings are intentionally unsafe and require you to understand low level C#, if you want safety or higher level abstraction. This library isn't for you.
-Currently there is no coroutine API, but i plan on rolling that out today-tomorrow.
