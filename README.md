@@ -84,6 +84,9 @@ local x = ExampleUserdataHighLevel.New(10)
 x:Print()
 ```
 
+# Notes
+There is still some things i need to iron out, there isn't any error trace when i throw an error currently and there isn't any api for coroutines and the codegen (i think i might of implemented it wrong? im not sure but im getting around same speeds so its obviously not working im guessing)
+
 # LuauSharp Low Level
 Very unsafe C# bindings for luau, built with flexibility, performance and support for AOT platforms in mind.
 
