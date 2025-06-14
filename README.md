@@ -4,7 +4,7 @@ Safe C# bindings for luau, built with convenience and support for IL2CPP in mind
 
 # Benchmarks
 
-I haven't gotten a graph of the benchmark for this, but it performs x4-5 worse than LuauSharp Low Level, with 10x more GC allocations as they use reflection vigorously, keep in mind these bindings are not for performance, they are for developer convenience.
+I haven't gotten a graph of the benchmark for this, but it performs x4-5 worse than LuauSharp Low Level, with 10x more GC allocations as they use reflection and boxing vigorously, keep in mind these bindings are not for performance, they are for developer convenience.
 
 # Why
 There is currently no actual luau C# bindings that are open source, have support for userdata and are as easy to use like this library, there are some other libraries but they fall short to this, this also works fully in IL2CPP through some hacks i did in this project (like all functions are actually userdata that contain a reference to that delegate) and other tricks.
