@@ -7,7 +7,7 @@ Safe C# bindings for luau, built with convenience and support for IL2CPP in mind
 I haven't gotten a graph of the benchmark for this, but it performs x4-5 worse than LuauSharp Low Level, with 10x more GC allocations as they use reflection and boxing vigorously, keep in mind these bindings are not for performance, they are for developer convenience.
 
 # Why
-There is currently no actual luau C# bindings that are open source, have support for userdata and are as easy to use like this library, there are some other libraries but they fall short to this, this also works fully in IL2CPP through some hacks i did in this project (like all functions are actually userdata that contain a reference to that delegate) and other tricks.
+I wanted modding in my game, and for that i wanted to use luau which is a great language for that purpose, there is currently no actual luau C# bindings that are open source, have support for userdata and are as easy to use like this library, there are some other libraries but they fall short to this, this also works fully in IL2CPP through some hacks i did in this project (like all functions are actually userdata that contain a reference to that delegate) and other tricks.
 
 # Set Up
 To set up LuauSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
@@ -100,7 +100,7 @@ These bindings are zero alloc until you work with strings, you can't avoid alloc
 I use spans and stackalloc for small strings (below 256 bytes) so it doesn't allocate on the heap when doing managed string -> byte* conversion. the opposite isn't possible in .NET/C#.
 
 # Why
-There is currently no actual luau C# bindings that are open source, have support for userdata and are as fast and performant as this. There are some luau bindings that I found but they fall short to the criteria which were essential to me, so I made my own solution.
+I wanted modding in my game, and for that i wanted to use luau which is a great language for that purpose, there is currently no actual luau C# bindings that are open source, have support for userdata and are as fast and performant as this. There are some luau bindings that I found but they fall short to the criteria which were essential to me, so I made my own solution.
 
 # Set Up
 To set up LuauSharp, you need the binaries. You could compile these yourself via the [cmake project](https://github.com/KinexDev/LuauSharpPInvoke) or you could use the precompiled binaries present in the repo, I only provide binaries for windows, you need to compile it for other platforms and it should work as I don't use any platform specific stuff.
