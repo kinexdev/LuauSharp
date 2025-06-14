@@ -20,7 +20,9 @@ vm.globals["print"] = (Action<object>)Console.WriteLine;
 vm.DoString("print(\"Hello World!\")");
 ```
 
-If you are using unity and IL2CPP, add `LUAU_UNITY` to the Scripting Symbols for everything to work correctly.
+
+
+DoString returns an object[] of managed C# objects from returned lua values, if you are using unity and IL2CPP, add `LUAU_UNITY` to the Scripting Symbols for everything to work correctly.
 
 # Functions
 After the luaState is created, you can push custom C# functions to the luau VM through globals as casting them to their delegate type, they work on instance methods too, they do not need to be static.
