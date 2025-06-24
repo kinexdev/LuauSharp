@@ -1,3 +1,11 @@
+# LuauSharp Low Level
+Very unsafe C# bindings for luau, built with flexibility, performance and support for AOT platforms in mind.
+
+# Benchmarks
+The benchmarks I ran were to create 25000 C# userdata objects (managed) and call a function in that managed object without precompiling the source to bytecode. LuauSharp performed exceptionally well, it is the fastest lua/u interpreter and with zero allocs compared to baseline C# - It has no GC overhead! I used benchmarkdotnet for the benchmark.
+
+![graph2](https://github.com/user-attachments/assets/d0da98af-1d95-4efe-b20d-3f324a029709)
+
 # Low level
 These luau bindings are really low level because they are built for speed and performance, not for convenience. LuauSharp is just a thin C# wrapper over the Luau C API. LuauSharp often forces you to use pointers for example the luaState or function pointers. Although its not just pure pointer usage, you also get some abstractions like for userdata or when you pass in a string. LuauSharp also uses no reflection for AOT and performance reasons - you need to do index and newindex manually.
 
