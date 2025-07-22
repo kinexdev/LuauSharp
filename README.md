@@ -1,4 +1,7 @@
 # LuauSharp
+
+Note: this project has been archived due to for [Luau for .NET](https://github.com/nuskey8/luau-dotnet/tree/main).
+
 This is the LuauSharp git repo, there is two versions of LuauSharp.
 - [LuauSharp HighLevel](https://github.com/kinexdev/LuauSharp/blob/main/HighLevel.md) - An easy to use C# idiomatic api built for developer convenience when embedding luau.
 - [LuauSharp LowLevel](https://github.com/kinexdev/LuauSharp/blob/main/LowLevel.md) - A thin wrapper over the C api, built with speed in mind.
